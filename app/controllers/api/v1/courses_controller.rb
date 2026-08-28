@@ -1,7 +1,7 @@
 module Api
   module V1
     class CoursesController < ApplicationController
-      before_action :set_course, only: [:show, :update, :destroy]
+      before_action :set_course, only: [ :show, :update, :destroy ]
 
       # GET /api/v1/courses
       def index

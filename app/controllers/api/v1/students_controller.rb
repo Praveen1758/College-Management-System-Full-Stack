@@ -1,7 +1,7 @@
 module Api
   module V1
     class StudentsController < ApplicationController
-      before_action :set_student, only: [:show, :update, :destroy]
+      before_action :set_student, only: [ :show, :update, :destroy ]
 
       # GET /api/v1/students
       # Supports ?search=name_or_email, ?course_id=X, ?min_marks=Y, and pagination
