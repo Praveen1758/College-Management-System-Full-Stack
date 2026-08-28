@@ -3,7 +3,8 @@ module Api
     class AuthController < ApplicationController
       # POST /api/v1/auth/register
       def register
-        user = User.new(user_params)
+        # Default role to 'student' to prevent privilege escalation
+        user = User.new(user_params.merge(role: "student"))
         if user.save
           token = JsonWebToken.encode(user_id: user.id, role: user.role)
           render json: { token: token, user: user_response(user) }, status: :created
@@ -26,7 +27,8 @@ module Api
       private
 
       def user_params
-        params.require(:user).permit(:name, :email, :password, :password_confirmation, :role)
+        # Removed :role from strong parameters
+        params.require(:user).permit(:name, :email, :password, :password_confirmation)
       end
 
       def user_response(user)
