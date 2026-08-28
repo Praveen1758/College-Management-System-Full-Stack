@@ -1,0 +1,99 @@
+module Api
+  module V1
+    class StudentsController < ApplicationController
+      before_action :set_student, only: [:show, :update, :destroy]
+
+      # GET /api/v1/students
+      # Supports ?search=name_or_email, ?course_id=X, ?min_marks=Y, and pagination
+      def index
+        students = Student.all
+
+        # Database-level search by name or email
+        if params[:search].present?
+          query = "%#{params[:search].downcase}%"
+          students = students.where("LOWER(name) LIKE ? OR LOWER(email) LIKE ?", query, query)
+        end
+
+        # Database-level filtering
+        students = students.where(course_id: params[:course_id]) if params[:course_id].present?
+        students = students.where("marks >= ?", params[:min_marks]) if params[:min_marks].present?
+
+        # Pagination
+        paginated_students = students.page(params[:page]).per(params[:per_page] || 20)
+
+        render json: {
+          data: paginated_students,
+          meta: {
+            page: paginated_students.current_page,
+            per_page: paginated_students.limit_value,
+            total: paginated_students.total_count
+          }
+        }
+      end
+
+      # GET /api/v1/students/:id
+      def show
+        render json: @student
+      end
+
+      # POST /api/v1/students
+      def create
+        @student = Student.new(student_params)
+        if @student.save
+          render json: @student, status: :created
+        else
+          render json: { errors: @student.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      # PATCH/PUT /api/v1/students/:id
+      def update
+        if @student.update(student_params)
+          render json: @student
+        else
+          render json: { errors: @student.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      # DELETE /api/v1/students/:id
+      def destroy
+        @student.destroy
+        head :no_content
+      end
+
+      # GET /api/v1/students/statistics
+      # Performed efficiently at the SQL level
+      def statistics
+        stats = Student.pluck(
+          Arel.sql("COUNT(*)"),
+          Arel.sql("AVG(marks)"),
+          Arel.sql("MAX(marks)"),
+          Arel.sql("MIN(marks)"),
+          Arel.sql("COUNT(CASE WHEN marks >= 40 THEN 1 END)"),
+          Arel.sql("COUNT(CASE WHEN marks < 40 THEN 1 END)")
+        ).first
+
+        render json: {
+          total_students: stats[0].to_i,
+          average_marks: stats[1] ? stats[1].to_f.round(2) : 0,
+          highest_marks: stats[2].to_i,
+          lowest_marks: stats[3].to_i,
+          passed_students: stats[4].to_i,
+          failed_students: stats[5].to_i
+        }
+      end
+
+      private
+
+      def set_student
+        @student = Student.find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: "Student not found" }, status: :not_found
+      end
+
+      def student_params
+        params.require(:student).permit(:name, :email, :age, :marks, :course_id)
+      end
+    end
+  end
+end
