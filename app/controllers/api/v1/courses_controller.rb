@@ -1,6 +1,8 @@
 module Api
   module V1
     class CoursesController < ApplicationController
+      before_action :authenticate_request!
+      before_action -> { authorize_roles!(:admin) }, only: [ :create, :update, :destroy ]
       before_action :set_course, only: [ :show, :update, :destroy ]
 
       # GET /api/v1/courses

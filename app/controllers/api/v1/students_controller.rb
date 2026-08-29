@@ -1,6 +1,10 @@
 module Api
   module V1
     class StudentsController < ApplicationController
+      before_action :authenticate_request!
+      before_action -> { authorize_roles!(:admin, :teacher) }, only: [ :index, :statistics ]
+      before_action -> { authorize_roles!(:admin) }, only: [ :create, :destroy ]
+      before_action -> { authorize_roles!(:admin, :teacher) }, only: [ :update ]
       before_action :set_student, only: [ :show, :update, :destroy ]
 
       # GET /api/v1/students
