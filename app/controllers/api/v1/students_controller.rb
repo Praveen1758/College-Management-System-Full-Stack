@@ -8,25 +8,22 @@ module Api
       before_action :set_student, only: [ :show, :update, :destroy ]
 
       # GET /api/v1/students
-      # Supports ?search=name_or_email, ?course_id=X, ?min_marks=Y, and pagination
       def index
-        students = Student.all
+        # Eager load course to prevent N+1 queries
+        students = Student.includes(:course)
 
-        # Database-level search by name or email
         if params[:search].present?
           query = "%#{params[:search].downcase}%"
-          students = students.where("LOWER(name) LIKE ? OR LOWER(email) LIKE ?", query, query)
+          students = students.where("LOWER(students.name) LIKE ? OR LOWER(students.email) LIKE ?", query, query)
         end
 
-        # Database-level filtering
         students = students.where(course_id: params[:course_id]) if params[:course_id].present?
         students = students.where("marks >= ?", params[:min_marks]) if params[:min_marks].present?
 
-        # Pagination
         paginated_students = students.page(params[:page]).per(params[:per_page] || 20)
 
         render json: {
-          data: paginated_students,
+          data: paginated_students.as_json(include: :course),
           meta: {
             page: paginated_students.current_page,
             per_page: paginated_students.limit_value,
