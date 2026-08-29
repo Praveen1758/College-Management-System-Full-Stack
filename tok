@@ -1,0 +1,26 @@
+register
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTc4ODA5ODEzMH0.E7l7rv-aN6YxBtmhV1EtynRtSX37SNf7ZJ-4ZokCWjg",
+  "user": {
+    "id": 1,
+    "name": "Test Admin",
+    "email": "admin@example.com",
+    "role": "student"
+  }
+}
+
+
+{
+  "email": "admin@example.com",
+  "password": "password123"
+}
+
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3ODgwOTg5MzR9.nc-XkR-LBYlDTAp4TLrz90Cv3MxiSAamc9fwlYZsTa0",
+  "user": {
+    "id": 1,
+    "name": "Test Admin",
+    "email": "admin@example.com",
+    "role": "admin"
+  }
+}
