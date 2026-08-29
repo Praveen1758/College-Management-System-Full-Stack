@@ -16,12 +16,10 @@ module Enrollments
       course = Course.find_by(id: @course_id)
       return { success: false, error: "Course not found", status: :not_found } unless course
 
-      # Prevent duplicate enrollment
       if Enrollment.exists?(student_id: student.id, course_id: course.id)
         return { success: false, error: "Student is already enrolled in this course", status: :unprocessable_entity }
       end
 
-      # Database Transaction ensures atomicity
       enrollment = nil
       ActiveRecord::Base.transaction do
         enrollment = Enrollment.create!(
@@ -31,6 +29,9 @@ module Enrollments
           status: "active"
         )
       end
+
+      # Queue background job after successful enrollment transaction
+      EnrollmentConfirmationJob.perform_later(student.email, course.name)
 
       { success: true, enrollment: enrollment, status: :created }
     rescue ActiveRecord::RecordInvalid => e
