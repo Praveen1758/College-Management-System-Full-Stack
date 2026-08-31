@@ -8,16 +8,27 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.token,
-    isAdmin: (state) => state.user?.role === 'admin'
+    role: (state) => state.user?.role || 'student',
+    isAdmin: (state) => state.user?.role === 'admin',
+    isTeacher: (state) => state.user?.role === 'teacher',
+    isStudent: (state) => state.user?.role === 'student'
   },
   actions: {
     async login(email, password) {
-      const response = await api.post('/auth/login', { email, password });
-      this.token = response.data.token;
-      this.user = response.data.user;
+      const response = await api.post('/auth/login', {
+        user: { email, password },
+        email,
+        password
+      });
 
-      localStorage.setItem('jwt_token', this.token);
-      localStorage.setItem('user', JSON.stringify(this.user));
+      const token = response.data.token || response.data.jwt;
+      const user = response.data.user || response.data.data;
+
+      this.token = token;
+      this.user = user;
+
+      localStorage.setItem('jwt_token', token);
+      localStorage.setItem('user', JSON.stringify(user));
     },
     logout() {
       this.token = '';
