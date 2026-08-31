@@ -6,6 +6,7 @@
       <div class="nav-links">
         <router-link to="/students">Students</router-link>
         <router-link to="/courses">Courses</router-link>
+        <router-link v-if="authStore.isAdmin" to="/enrollments">Enrollment</router-link>
         <button @click="handleLogout" class="btn-logout">Logout</button>
       </div>
     </nav>

@@ -3,10 +3,17 @@ import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/LoginView.vue'
 import StudentsView from '@/views/StudentsView.vue'
 import CoursesView from '@/views/CoursesView.vue'
+import EnrollmentView from '@/views/EnrollmentView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/enrollments',
+      name: 'enrollments',
+      component: EnrollmentView,
+      meta: { requiresAuth: true }
+    }
     {
       path: '/',
       redirect: '/login',
