@@ -7,9 +7,10 @@ module Api
 
       # GET /api/v1/courses
       def index
-        @courses = Course.page(params[:page]).per(params[:per_page] || 20)
+        @courses = Course.includes(:students).page(params[:page]).per(params[:per_page] || 20)
+  
         render json: {
-          data: @courses,
+          data: @courses.as_json(include: :students),
           meta: {
             page: @courses.current_page,
             per_page: @courses.limit_value,

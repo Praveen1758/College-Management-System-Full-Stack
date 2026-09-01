@@ -18,6 +18,25 @@ module Api
         end
       end
 
+      def destroy
+        enrollment = Enrollment.find_by(
+          student_id: enrollment_params[:student_id],
+          course_id: enrollment_params[:course_id]
+        )
+
+        if enrollment
+          student = enrollment.student
+          enrollment.destroy
+          
+          # Crucial: Reset student's course_id so Course.includes(:students) stops returning them
+          student.update(course_id: nil) if student && student.course_id.to_s == enrollment_params[:course_id].to_s
+          
+          render json: { message: 'Student removed from course successfully' }, status: :ok
+        else
+          render json: { error: 'Enrollment record not found' }, status: :not_found
+        end
+      end
+
       private
 
       def enrollment_params

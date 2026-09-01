@@ -1,7 +1,17 @@
 module Enrollments
   class Create
     def self.call(student_id:, course_id:)
-      new(student_id: student_id, course_id: course_id).call
+      enrollment = Enrollment.new(student_id: student_id, course_id: course_id)
+
+      if enrollment.save
+        # Sync the direct belongs_to relation so Course.includes(:students) displays the student!
+        student = Student.find_by(id: student_id)
+        student&.update(course_id: course_id)
+
+        { success: true, enrollment: enrollment, status: :created }
+      else
+        { success: false, error: enrollment.errors.full_messages.join(', '), status: :unprocessable_entity }
+      end
     end
 
     def initialize(student_id:, course_id:)

@@ -5,7 +5,12 @@ Rails.application.routes.draw do
       post "auth/login", to: "auth#login"
 
       resources :courses
-      resources :enrollments, only: [ :create ]
+      
+      resources :enrollments, only: [:create] do
+        collection do
+          delete :destroy
+        end
+      end
 
       resources :students do
         collection do

@@ -20,7 +20,8 @@ module Api
         students = students.where(course_id: params[:course_id]) if params[:course_id].present?
         students = students.where("marks >= ?", params[:min_marks]) if params[:min_marks].present?
 
-        paginated_students = students.page(params[:page]).per(params[:per_page] || 20)
+        # Explicitly order by student ID before paginating to fix scrambled order
+        paginated_students = students.order(:id).page(params[:page]).per(params[:per_page] || 20)
 
         render json: {
           data: paginated_students.as_json(include: :course),
