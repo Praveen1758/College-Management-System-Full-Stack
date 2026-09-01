@@ -1,54 +1,60 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import LoginView from '@/views/LoginView.vue'
-import StudentsView from '@/views/StudentsView.vue'
-import CoursesView from '@/views/CoursesView.vue'
-import EnrollmentView from '@/views/EnrollmentView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import LoginView from '@/views/LoginView.vue';
+import StudentsView from '@/views/StudentsView.vue';
+import CoursesView from '@/views/CoursesView.vue';
+
+const routes = [
+  { 
+    path: '/login', 
+    name: 'login', 
+    component: LoginView 
+  },
+  { 
+    path: '/students', 
+    name: 'students', 
+    component: StudentsView, 
+    meta: { requiresAuth: true, roles: ['admin', 'teacher'] } 
+  },
+  { 
+    path: '/courses', 
+    name: 'courses', 
+    component: CoursesView, 
+    meta: { requiresAuth: true, roles: ['admin', 'teacher', 'student'] } 
+  },
+  { 
+    path: '/:pathMatch(.*)*', 
+    redirect: '/login' 
+  }
+];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/enrollments',
-      name: 'enrollments',
-      component: EnrollmentView,
-      meta: { requiresAuth: true }
-    }
-    {
-      path: '/',
-      redirect: '/login',
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginView,
-    },
-    {
-      path: '/students',
-      name: 'students',
-      component: StudentsView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/courses',
-      name: 'courses',
-      component: CoursesView,
-      meta: { requiresAuth: true }
-    },
-  ],
-})
+  history: createWebHistory(),
+  routes
+});
 
-// Navigation Guard: Protect pages requiring authentication
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
+router.beforeEach((to, from) => {
+  const authStore = useAuthStore();
 
+  // 1. If route requires auth and user is NOT logged in
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
-    next('/students')
-  } else {
-    next()
+    if (to.path !== '/login') {
+      return { path: '/login' }; // Stop infinite loop
+    }
   }
-})
 
-export default router
+  // 2. If user is already logged in and tries to access /login
+  if (to.path === '/login' && authStore.isAuthenticated) {
+    if (authStore.userRole === 'admin' || authStore.userRole === 'teacher') {
+      return { path: '/students' };
+    }
+    return { path: '/courses' };
+  }
+
+  // 3. Role-based access restriction
+  if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
+    return { path: '/courses' };
+  }
+});
+
+export default router;
