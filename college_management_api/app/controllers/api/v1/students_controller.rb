@@ -85,6 +85,16 @@ module Api
         }
       end
 
+      def me
+        student = Student.find_by(email: current_user.email)
+
+        if student
+          render json: student.as_json(include: :course)
+        else
+          render json: { error: "Student profile not found" }, status: :not_found
+        end
+      end
+
       private
 
       def set_student
