@@ -22,8 +22,16 @@
         <div class="enrolled-section">
           <h4>Enrolled Students ({{ course.students?.length || 0 }})</h4>
           <ul v-if="course.students && course.students.length" class="student-list">
-            <li v-for="student in course.students" :key="student.id">
-              {{ student.name }} <span class="student-email">({{ student.email }})</span>
+            <li v-for="student in course.students" :key="student.id" class="student-item">
+              <span>{{ student.name }} <small class="student-email">({{ student.email }})</small></span>
+              <button 
+                v-if="authStore.isAdmin" 
+                @click="unenrollStudent(course.id, student.id)" 
+                class="btn-unenroll"
+                title="Remove student from course"
+              >
+                ✕ Remove
+              </button>
             </li>
           </ul>
           <p v-else class="no-enrolled">No students enrolled yet.</p>
@@ -75,7 +83,8 @@ const form = ref({
 const fetchCourses = async () => {
   try {
     const response = await api.get('/courses');
-    courses.value = Array.isArray(response.data) ? response.data : response.data.data || [];
+    // Extracts array from paginated `{ data: [...] }` or raw array `[...]`
+    courses.value = response.data.data ? response.data.data : (Array.isArray(response.data) ? response.data : []);
   } catch (err) {
     console.error('Failed to load courses:', err);
   }
@@ -98,10 +107,15 @@ const closeModal = () => {
 
 const saveCourse = async () => {
   try {
+    const payload = {
+      name: form.value.name,
+      description: form.value.description
+    };
+
     if (isEditing.value) {
-      await api.put(`/courses/${form.value.id}`, { course: form.value });
+      await api.put(`/courses/${form.value.id}`, { course: payload });
     } else {
-      await api.post('/courses', { course: form.value });
+      await api.post('/courses', { course: payload });
     }
     closeModal();
     fetchCourses();
@@ -120,6 +134,27 @@ const deleteCourse = async (id) => {
   }
 };
 
+const unenrollStudent = async (courseId, studentId) => {
+  if (!confirm('Remove this student from the course?')) return;
+
+  try {
+    await api.delete('/enrollments', {
+      data: { enrollment: { course_id: courseId, student_id: studentId } }
+    });
+
+    // Manually filter out the student from local reactive state immediately
+    const course = courses.value.find(c => c.id === courseId);
+    if (course && course.students) {
+      course.students = course.students.filter(s => s.id !== studentId);
+    }
+
+    // Still fetch fresh data from backend
+    await fetchCourses();
+  } catch (err) {
+    alert(err.response?.data?.error || 'Failed to remove student from course.');
+  }
+};
+
 onMounted(fetchCourses);
 </script>
 
@@ -134,8 +169,12 @@ onMounted(fetchCourses);
 .description { color: #475569; margin: 15px 0; font-size: 0.95rem; }
 .enrolled-section { background: #f8fafc; padding: 12px; border-radius: 6px; }
 .enrolled-section h4 { margin: 0 0 8px 0; font-size: 0.9rem; color: #334155; }
-.student-list { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #1e293b; }
+.student-list { margin: 0; padding: 0; list-style: none; font-size: 0.85rem; color: #1e293b; }
+.student-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
+.student-item:last-child { border-bottom: none; }
 .student-email { color: #64748b; }
+.btn-unenroll { background: transparent; color: #ef4444; border: none; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+.btn-unenroll:hover { text-decoration: underline; }
 .no-enrolled { font-size: 0.85rem; color: #94a3b8; margin: 0; }
 .btn-primary { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
 .btn-secondary { background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
