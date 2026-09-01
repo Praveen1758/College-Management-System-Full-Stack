@@ -3,7 +3,8 @@ import { useAuthStore } from '@/stores/auth';
 import LoginView from '@/views/LoginView.vue';
 import StudentsView from '@/views/StudentsView.vue';
 import CoursesView from '@/views/CoursesView.vue';
-import StudentProfile from '@/views/StudentProfile.vue'
+import StudentProfile from '@/views/StudentProfile.vue';
+import EnrollmentsView from '@/views/EnrollmentsView.vue';
 
 const routes = [
   { 
@@ -16,6 +17,15 @@ const routes = [
     name: 'students', 
     component: StudentsView, 
     meta: { requiresAuth: true, roles: ['admin', 'teacher'] } 
+  },
+  {
+    path: '/enrollments',
+    name: 'enrollments',
+    component: EnrollmentsView,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    }
   },
   {
     path: "/profile",
@@ -47,16 +57,14 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { path: "/login" };
-  }
+  } 
 
   if (to.path === "/login" && authStore.isAuthenticated) {
-    if (to.path === "/login" && authStore.isAuthenticated) {
-      if (authStore.role === "admin" || authStore.role === "teacher") {
-        return { path: "/students" };
-      }
+  if (authStore.role === "admin" || authStore.role === "teacher") {
+    return { path: "/students" };
+  }
 
-      return { path: "/profile" };
-    }
+  return { path: "/profile" };
   }
 
   if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
