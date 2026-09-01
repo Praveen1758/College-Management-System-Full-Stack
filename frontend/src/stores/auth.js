@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = token;
         this.user = user;
 
-        localStorage.setItem('token', token);
+        localStorage.setItem('jwt_token', token);
         localStorage.setItem('user', JSON.stringify(user));
 
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

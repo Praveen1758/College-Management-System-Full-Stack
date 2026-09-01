@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth';
 import LoginView from '@/views/LoginView.vue';
 import StudentsView from '@/views/StudentsView.vue';
 import CoursesView from '@/views/CoursesView.vue';
+import StudentProfile from '@/views/StudentProfile.vue'
 
 const routes = [
   { 
@@ -15,6 +16,14 @@ const routes = [
     name: 'students', 
     component: StudentsView, 
     meta: { requiresAuth: true, roles: ['admin', 'teacher'] } 
+  },
+  {
+    path: "/profile",
+    component: StudentProfile,
+    meta: {
+      requiresAuth: true,
+      roles: ["student"]
+    }
   },
   { 
     path: '/courses', 
@@ -33,27 +42,25 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore();
 
-  // 1. If route requires auth and user is NOT logged in
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    if (to.path !== '/login') {
-      return { path: '/login' }; // Stop infinite loop
+    return { path: "/login" };
+  }
+
+  if (to.path === "/login" && authStore.isAuthenticated) {
+    if (to.path === "/login" && authStore.isAuthenticated) {
+      if (authStore.role === "admin" || authStore.role === "teacher") {
+        return { path: "/students" };
+      }
+
+      return { path: "/profile" };
     }
   }
 
-  // 2. If user is already logged in and tries to access /login
-  if (to.path === '/login' && authStore.isAuthenticated) {
-    if (authStore.userRole === 'admin' || authStore.userRole === 'teacher') {
-      return { path: '/students' };
-    }
-    return { path: '/courses' };
-  }
-
-  // 3. Role-based access restriction
-  if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
-    return { path: '/courses' };
+  if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
+    return { path: "/courses" };
   }
 });
 

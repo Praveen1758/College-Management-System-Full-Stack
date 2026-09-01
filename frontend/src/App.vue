@@ -1,12 +1,25 @@
 <template>
   <div id="app">
     <!-- Navbar displayed only when user is logged in -->
-    <nav v-if="authStore.isAuthenticated" class="navbar">
+    <nav v-if="auth.isAuthenticated" class="navbar">
       <div class="nav-brand">College Management System</div>
       <div class="nav-links">
-        <router-link to="/students">Students</router-link>
-        <router-link to="/courses">Courses</router-link>
-        <router-link v-if="authStore.isAdmin" to="/enrollments">Enrollment</router-link>
+        <router-link
+          v-if="auth.role !== 'student'"
+          to="/students">
+          Students
+        </router-link>
+
+        <router-link
+          v-if="auth.role === 'student'"
+          to="/profile">
+          My Profile
+        </router-link>
+
+        <router-link to="/courses">
+          Courses
+        </router-link>
+        <router-link v-if="auth.isAdmin" to="/enrollments">Enrollment</router-link>
         <button @click="handleLogout" class="btn-logout">Logout</button>
       </div>
     </nav>
@@ -22,11 +35,11 @@
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
-const authStore = useAuthStore()
+const auth = useAuthStore()
 const router = useRouter()
 
 const handleLogout = () => {
-  authStore.logout()
+  auth.logout()
   router.push('/login')
 }
 </script>
