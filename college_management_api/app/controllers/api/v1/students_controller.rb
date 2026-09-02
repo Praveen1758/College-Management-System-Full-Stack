@@ -46,7 +46,7 @@ module Api
           User.create!(
             name: @student.name,
             email: @student.email,
-            password: "Student@123",
+            password: "password123",
             role: "student"
           )
 
