@@ -12,6 +12,9 @@ module Api
         )
 
         if result[:success]
+          EnrollmentConfirmationJob.perform_later(result[:enrollment].student.id)
+
+
           render json: result[:enrollment], status: result[:status]
         else
           render json: { error: result[:error] }, status: result[:status]

@@ -50,6 +50,14 @@ module Api
             role: "student"
           )
 
+          Enrollment.find_or_create_by!(
+            student: @student,
+            course: Course.find(student_params[:course_id])
+          ) do |enrollment|
+            enrollment.enrolled_at = Time.current
+            enrollment.status = "active"
+          end
+
           render json: @student, status: :created
         end
       rescue ActiveRecord::RecordInvalid => e
