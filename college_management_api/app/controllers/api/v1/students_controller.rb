@@ -40,12 +40,20 @@ module Api
 
       # POST /api/v1/students
       def create
-        @student = Student.new(student_params)
-        if @student.save
+        Student.transaction do
+          @student = Student.create!(student_params)
+
+          User.create!(
+            name: @student.name,
+            email: @student.email,
+            password: "Student@123",
+            role: "student"
+          )
+
           render json: @student, status: :created
-        else
-          render json: { errors: @student.errors.full_messages }, status: :unprocessable_entity
         end
+      rescue ActiveRecord::RecordInvalid => e
+        render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
       end
 
       # PATCH/PUT /api/v1/students/:id
@@ -112,9 +120,12 @@ module Api
         render json: { error: "Student not found" }, status: :not_found
       end
 
-      private
       def student_params
-        params.require(:student).permit(:name, :age)
+        if current_user.role == "teacher"
+          params.require(:student).permit(:marks)
+        else
+          params.require(:student).permit(:name, :email, :age, :marks, :course_id)
+        end
       end
     end
   end

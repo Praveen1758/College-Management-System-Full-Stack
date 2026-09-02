@@ -73,15 +73,15 @@
         <form @submit.prevent="saveStudent">
           <div class="form-group">
             <label>Full Name</label>
-            <input v-model="form.name" required />
+            <input v-model="form.name" :disabled="authStore.isTeacher" required />
           </div>
           <div class="form-group">
             <label>Email</label>
-            <input type="email" v-model="form.email" required />
+            <input type="email" v-model="form.email" :disabled="authStore.isTeacher" required />
           </div>
           <div class="form-group">
             <label>Age</label>
-            <input type="number" v-model="form.age" required />
+            <input type="number" v-model="form.age" :disabled="authStore.isTeacher" required />
           </div>
           <div class="form-group">
             <label>Marks</label>
@@ -89,7 +89,7 @@
           </div>
           <div class="form-group">
             <label>Course</label>
-            <select v-model="form.course_id" required>
+            <select v-model="form.course_id" :disabled="authStore.isTeacher" required>
               <option value="" disabled>-- Select Course --</option>
               <option v-for="course in courses" :key="course.id" :value="course.id">
                 {{ course.name }}
