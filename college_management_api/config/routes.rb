@@ -16,6 +16,7 @@ Rails.application.routes.draw do
         collection do
           get :statistics
           get :me
+          patch :me
         end
       end
     end

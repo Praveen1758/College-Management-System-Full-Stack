@@ -10,13 +10,23 @@
         <p><strong>Marks:</strong> {{ student.marks }}</p>
         <p><strong>Course:</strong> {{ student.course?.name }}</p>
       </div>
+      
+      <button @click="editing = !editing">
+        {{ editing ? "Cancel" : "Edit Profile" }}
+      </button>
 
-      <button class="edit-btn">Edit Profile</button>
+      <div v-if="editing">
+      <input v-model="form.name" />
+      <input v-model="form.age" type="number" />
+      <button @click="saveProfile">Save</button>
+      </div>
+      
+      
     </div>
-
     <div v-else>
       Loading profile...
     </div>
+
   </div>
 </template>
 
@@ -25,13 +35,38 @@ import { ref, onMounted } from "vue";
 import api from "@/services/api";
 
 const student = ref(null);
+const editing = ref(false);
+
+const form = ref({
+  name: "",
+  age: "",
+});
+
+const saveProfile = async () => {
+  try {
+    const response = await api.patch("/students/me", {
+      student: form.value,
+    });
+
+    student.value = response.data;
+    editing.value = false;
+    alert("Profile updated!");
+  } catch (err) {
+    console.error(err);
+    alert("Update failed.");
+  }
+};
 
 const loadProfile = async () => {
   try {
     const response = await api.get("/students/me");
     student.value = response.data;
+
+    form.value.name = response.data.name;
+    form.value.age = response.data.age;
   } catch (error) {
-    console.error(error);
+    console.log(error.response);
+    alert(error.response?.data?.error || JSON.stringify(error.response?.data) || error.message);
   }
 };
 

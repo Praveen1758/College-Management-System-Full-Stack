@@ -85,13 +85,22 @@ module Api
         }
       end
 
+
       def me
         student = Student.find_by(email: current_user.email)
 
-        if student
-          render json: student.as_json(include: :course)
+        unless student
+          return render json: { error: "Student profile not found" }, status: :not_found
+        end
+
+        if request.patch?
+          if student.update(student_params)
+            render json: student.as_json(include: :course)
+          else
+            render json: { errors: student.errors.full_messages }, status: :unprocessable_entity
+          end
         else
-          render json: { error: "Student profile not found" }, status: :not_found
+          render json: student.as_json(include: :course)
         end
       end
 
@@ -103,8 +112,9 @@ module Api
         render json: { error: "Student not found" }, status: :not_found
       end
 
+      private
       def student_params
-        params.require(:student).permit(:name, :email, :age, :marks, :course_id)
+        params.require(:student).permit(:name, :age)
       end
     end
   end
