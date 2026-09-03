@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: ./college_management_api
+    container_name: college_backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./college_management_api:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/college_management_development
+      REDIS_URL: redis://redis:6379/1
+
+  frontend:
+    image: node:20
+    container_name: college_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: bash -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16
+    container_name: college_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: college_management_development
+
+  redis:
+    image: redis:7
+    container_name: college_redis
+
+  sidekiq:
+    build: ./college_management_api
+    container_name: college_sidekiq
+    command: bundle exec sidekiq
+    volumes:
+      - ./college_management_api:/app
+    depends_on:
+      - backend
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1
+      DATABASE_URL: postgres://postgres:password@db:5432/college_management_development
