@@ -3,7 +3,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "auth/register", to: "auth#register"
       post "auth/login", to: "auth#login"
-
+      
       resources :courses
       
       resources :enrollments, only: [:create] do
@@ -11,7 +11,7 @@ Rails.application.routes.draw do
           delete :destroy
         end
       end
-
+      
       resources :students do
         collection do
           get :statistics
@@ -21,4 +21,6 @@ Rails.application.routes.draw do
       end
     end
   end
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
 end
